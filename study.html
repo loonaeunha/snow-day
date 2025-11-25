@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Study Space</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- 색상 변수 설정 --- */
+        :root {
+            --bg-alice: #E5F0FA;
+            --columbia-blue: #D1E8FC;
+            --uranian-blue: #BDE0FE;
+            --light-sky: #A2D2FF;
+            --maya-blue: #8FC9FF;
+            --text-dark: #475569;
+            --text-light: #94A3B8;
+            --white: #FFFFFF;
+        }
+
+        /* --- 기본 및 레이아웃 --- */
+        * { box-sizing: border-box;
+            margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-alice);
+            font-family: 'Noto Sans KR', sans-serif;
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            /* 헤더 높이만큼 여백 확보 (120px 유지) */
+            padding-top: 120px; 
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px; 
+            display: grid; 
+            grid-template-columns: 300px 1fr 300px; 
+            gap: 24px;
+            grid-auto-rows: minmax(min-content, max-content); 
+        }
+        
+        /* 💡 수정: main 영역을 플렉스 컨테이너로 설정하여 수직 정렬 및 간격 확보 */
+        .container > main { 
+            grid-column: 2 / 3; 
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* 💡 추가: 메모 카드들이 렌더링 될 Wrapper의 기본 간격 설정 */
+        #memoCardWrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .quest-log-container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px; 
+            align-items: start; 
+        }
+        
+        .container > aside:first-child { 
+            grid-column: 1 / 2;
+        }
+        
+        .container > aside:last-child { 
+            grid-column: 3 / 4;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 20px; 
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(143, 201, 255, 0.15); 
+            border: 1px solid #fff; 
+            width: 100%; 
+        }
+        
+        .timer-card {
+            min-height: 270px; 
+        }
+
+        /* 💡 수정: memo-card의 최소 높이를 없애고 유동적으로 변경 */
+        .memo-card {
+            display: flex;
+            flex-direction: column;
+            min-height: 150px; /* 최소 높이 보장 */
+        }
+        
+        .container > aside:last-child > .card:first-child {
+            min-height: 270px; 
+        }
+        
+        h2 {
+            font-family: 'Jua', sans-serif;
+            font-size: 18px; 
+            margin-bottom: 20px; 
+            color: var(--maya-blue);
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+        }
+
+        /* --- 상단 탭 및 헤더 --- */
+        .header-container {
+            width: 100%;
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            z-index: 1000;
+            background-color: var(--bg-alice);
+            padding: 20px 0 20px 0; 
+        }
+        .header-content {
+            width: 100%;
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 0 20px; 
+            display: flex; 
+            height: 40px; 
+            align-items: center; 
+        }
+        .header-content > * { 
+            flex-shrink: 0;
+        }
+        .nav-container {
+            display: flex;
+            gap: 10px; 
+            overflow-x: auto; 
+            align-items: center; 
+            flex-grow: 1; 
+            flex-shrink: 1; 
+            margin: 0 10px;
+        }
+        .nav-container::-webkit-scrollbar { 
+            height: 8px;
+        }
+        .nav-container::-webkit-scrollbar-thumb { 
+            background: var(--columbia-blue); 
+            border-radius: 10px;
+        }
+        .nav-container::-webkit-scrollbar-track { 
+            background: var(--bg-alice);
+        }
+
+        .page-tab {
+            background: rgba(255, 255, 255, 0.6);
+            padding: 8px 15px; 
+            height: 40px; 
+            border-radius: 15px;
+            font-family: 'Jua', sans-serif; 
+            cursor: pointer; 
+            color: var(--text-light);
+            transition: all 0.2s; 
+            display: flex; 
+            align-items: center;
+            gap: 8px; 
+            border: 1px solid transparent;
+            min-width: 100px; 
+            justify-content: space-between; 
+            flex-shrink: 0;
+            line-height: 1; 
+        }
+        .page-tab:hover { 
+            background: white; 
+            color: var(--maya-blue);
+        }
+        .page-tab.active {
+            background: white;
+            color: var(--maya-blue); 
+            font-weight: bold;
+            box-shadow: none; 
+            border-bottom: none; 
+            border: 1px solid transparent;
+        }
+        
+        .add-tab-btn, .page-list-btn {
+            width: 40px; 
+            height: 40px;
+            background: var(--maya-blue);
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-size: 18px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            z-index: 1001;
+            line-height: 1; 
+        }
+        .page-list-btn { 
+            background: var(--uranian-blue); 
+            font-size: 16px;
+            line-height: 1; 
+        }
+        .page-list-btn i {
+            vertical-align: middle;
+        }
+
+        /* --- 페이지 목록 모달 --- */
+        #pageListModal {
+            display: none;
+            pointer-events: none; 
+            position: fixed; 
+            top: 70px; 
+            left: 50%; 
+            transform: translate(-50%, 0); 
+            width: 300px; 
+            max-height: 80vh; 
+            overflow-y: auto; 
+            background: var(--white); 
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2); 
+            z-index: 1002; 
+            padding: 20px; 
+            border: 1px solid var(--columbia-blue);
+        }
+        #pageListModal h3 {
+            font-family: 'Jua', sans-serif;
+            color: var(--maya-blue); 
+            /* 🌟 [수정] 제목 아래 여백 증가 */
+            margin-bottom: 18px; 
+            border-bottom: 2px solid var(--bg-alice); 
+            /* 🌟 [수정] 파란색 선 위 여백 증가 */
+            padding-bottom: 8px;
+        }
+        .modal-page-item {
+            padding: 10px;
+            border-radius: 10px; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+        .modal-page-item:hover { 
+            background: var(--columbia-blue);
+        }
+        .modal-page-item.active { 
+            background: var(--light-sky); 
+            color: white; 
+            font-weight: bold;
+        }
+        .delete-modal-page-btn {
+            font-size: 14px !important;
+            color: var(--text-light) !important; 
+            opacity: 0.8; 
+            cursor: pointer;
+        }
+        .delete-modal-page-btn:hover { 
+            color: red !important;
+            opacity: 1; 
+        }
+        
+        /* --- QUEST LOG --- */
+        .quest-list { 
+            list-style: none;
+            padding: 0; 
+            margin-bottom: 15px; 
+        }
+        .todo-item {
+            display: flex;
+            align-items: center; 
+            background: var(--bg-alice); 
+            padding: 14px; 
+            border-radius: 12px; 
+            margin-bottom: 8px; 
+            border: 1px solid var(--columbia-blue);
+        }
+        .todo-item.checked { 
+            background: var(--uranian-blue); 
+            opacity: 0.7;
+        }
+        .todo-checkbox {
+            width: 20px;
+            height: 20px; 
+            border: 2px solid var(--maya-blue); 
+            border-radius: 6px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer;
+            margin-right: 10px; 
+            flex-shrink: 0;
+            background-color: var(--white);
+        }
+        .todo-item.checked .todo-checkbox { 
+            background-color: var(--maya-blue); 
+            color: white; 
+            border-color: var(--maya-blue);
+        }
+        .todo-input { 
+            flex-grow: 1; 
+            border: none; 
+            background: transparent; 
+            font-family: 'Noto Sans KR';
+            outline: none; 
+        }
+        .todo-item.checked .todo-input { 
+            text-decoration: line-through;
+        }
+        .delete-btn { 
+            background: transparent; 
+            border: none; 
+            color: var(--text-light); 
+            cursor: pointer;
+        }
+        .add-btn {
+            width: 100%;
+            padding: 12px; 
+            background: var(--maya-blue); 
+            color: white;
+            border: none; 
+            border-radius: 12px; 
+            font-family: 'Jua', sans-serif; 
+            cursor: pointer;
+        }
+
+        /* --- FOCUS TIMER --- */
+        .timer-card { 
+            text-align: center;
+            background: linear-gradient(180deg, var(--white) 0%, var(--bg-alice) 100%); 
+        }
+        .timer-inputs {
+            display: flex;
+            justify-content: center; 
+            align-items: center;
+            font-family: 'Jua', sans-serif; 
+            font-size: 64px; 
+            color: var(--maya-blue); 
+            margin: 20px 0;
+        }
+        .time-input {
+            width: 100px;
+            border: none; 
+            background: transparent; 
+            font-family: inherit; 
+            font-size: inherit;
+            color: inherit; 
+            text-align: center; 
+            border-bottom: 3px solid transparent; 
+            outline: none;
+        }
+        /* 숫자 입력 필드에서 증감 버튼(스피너) 숨김 */
+        input::-webkit-outer-spin-button, 
+        input::-webkit-inner-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0;
+        }
+        .btn {
+            padding: 12px 35px;
+            border: none; 
+            border-radius: 50px; 
+            font-family: 'Jua', sans-serif;
+            font-size: 16px; 
+            cursor: pointer; 
+            color: white;
+            box-shadow: 0 4px 15px rgba(143, 201, 255, 0.4); 
+        }
+        .btn-start, .btn-reset { 
+            background: linear-gradient(90deg, var(--light-sky), var(--maya-blue));
+        }
+
+        /* --- MEMO --- */
+        .memo-card h2 {
+            margin-bottom: 0; /* 제목 아래 여백 제거 */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            /* 💡 수정: 'MEMO' 텍스트를 제거하고 아이콘만 남기기 위한 스타일 */
+            font-size: 0; /* 텍스트 크기를 0으로 만들어 MEMO 텍스트를 숨김 */
+        }
+        /* MEMO 제목에 있는 펜 아이콘의 크기만 다시 키움 */
+        .memo-card h2 .fas.fa-pen-fancy {
+            font-size: 18px; /* 아이콘 크기 복구 */
+            margin-right: 5px; /* 제목과 텍스트 간격 유지 */
+            color: var(--maya-blue);
+        }
+
+        .memo-card h2 .delete-memo-btn {
+            background: none;
+            border: none;
+            font-size: 16px; /* 'X' 아이콘 크기 */
+            color: var(--text-light); 
+            cursor: pointer;
+            padding: 0; /* 기본 패딩 제거 */
+            line-height: 1;
+        }
+        .memo-card h2 .delete-memo-btn:hover {
+            color: #e74c3c;
+        }
+
+        .memo-card textarea {
+            width: 100%;
+            height: 100px; /* 기본 높이 설정 */
+            overflow-y: hidden; 
+            border: none; 
+            resize: none; 
+            background: transparent;
+            font-family: 'Noto Sans KR', sans-serif; 
+            font-size: 15px; 
+            line-height: 2.0; 
+            color: var(--text-dark);
+            outline: none; 
+            padding: 5px 5px 5px 5px; 
+            box-sizing: border-box; 
+            vertical-align: top;
+            /* 노트 줄 배경 설정 */
+            background-image: linear-gradient(to bottom, transparent 95%, var(--columbia-blue) 95%);
+            background-size: 100% 30px;
+            flex-grow: 1; 
+            margin-top: 15px; /* 제목과의 간격 */
+        }
+        
+        /* 새로운 메모 추가 버튼 스타일 (main 하단에 배치) */
+        .add-memo-btn {
+            width: 100%;
+            padding: 12px; 
+            background: var(--light-sky);
+            color: white;
+            border: none; 
+            border-radius: 12px; 
+            font-family: 'Jua', sans-serif; 
+            cursor: pointer;
+            margin-top: 5px; /* 타이머/메모 카드와 간격 */
+        }
+
+        /* --- READING --- */
+        .progress-container { 
+            height: 12px;
+            background: var(--bg-alice); 
+            border-radius: 10px; 
+            overflow: hidden; 
+            margin-top: 15px; 
+        }
+        .progress-bar { 
+            height: 100%;
+            background: var(--maya-blue); 
+            width: 0%; 
+            transition: width 0.5s ease-in-out; 
+        }
+        .book-input {
+            width: 100%;
+            padding: 10px; 
+            border: 1px solid var(--columbia-blue); 
+            border-radius: 10px;
+            background: var(--white); 
+            margin-bottom: 8px; 
+            font-family: 'Noto Sans KR'; 
+            color: var(--text-dark);
+        }
+        .book-input.placeholder-text::placeholder {
+            color: var(--text-dark);
+            opacity: 1; 
+        }
+
+
+        /* --- MUSIC/DATE --- */
+        .music-card {
+            min-height: 250px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+        }
+        .music-card-header { 
+            display: flex;
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+        }
+        .date-input {
+            border: 1px solid var(--columbia-blue);
+            background: var(--maya-blue); 
+            padding: 8px 15px; 
+            border-radius: 15px; 
+            font-family: 'Jua'; 
+            color: white; 
+            outline: none; 
+            font-size: 14px; 
+            cursor: pointer;
+            position: relative;
+            appearance: none;
+            -webkit-appearance: none;
+            
+            color: transparent; 
+            padding-right: 40px; 
+            font-weight: bold;
+
+            display: flex;
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+        }
+
+        /* 기본 텍스트의 영역을 조정하여 정확히 가운데 정렬 */
+        .date-input::before {
+            content: '연도-월-일';
+            color: white;
+            opacity: 0.8;
+            position: absolute;
+            top: 0; 
+            left: 0; 
+            right: 40px; 
+            bottom: 0;
+            display: flex; 
+            align-items: center;
+            justify-content: center; 
+            pointer-events: none;
+            font-weight: normal;
+            text-align: center; 
+        }
+        .date-input.has-value::before {
+            content: "";
+            display: none;
+        }
+        /* 날짜 선택 후 값도 input의 flexbox 중앙 정렬 사용 */
+        .date-input.has-value {
+            color: white !important;
+            font-weight: bold;
+            justify-content: center;
+        }
+        
+        .date-input::-webkit-calendar-picker-indicator {
+            position: absolute;
+            right: 10px; 
+            opacity: 1; 
+            width: 25px; 
+            height: 25px;
+            cursor: pointer; 
+            filter: invert(1);
+        }
+
+        .music-url-input {
+            width: 100%;
+            padding: 8px; 
+            border: 1px solid #eee; 
+            border-radius: 8px;
+            font-size: 12px; 
+            background: #fafafa;
+        }
+        .music-controls {
+            display: flex;
+            align-items: center; 
+            justify-content: space-between;
+            background: var(--bg-alice); 
+            padding: 10px; 
+            border-radius: 15px; 
+            margin-top: 10px;
+            border: 1px solid var(--uranian-blue);
+        }
+        .now-playing {
+            font-size: 12px;
+            color: var(--text-light); 
+            overflow: hidden; 
+            white-space: nowrap; 
+            text-overflow: ellipsis; 
+            max-width: 150px;
+        }
+        
+        .play-btn {
+            background: var(--maya-blue);
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .play-btn i {
+            color: white; 
+            font-size: 14px;
+        }
+        
+        /* 데이터 초기화 버튼 스타일 */
+        .reset-data-btn {
+            width: 100%;
+            padding: 12px; 
+            background: #e74c3c; 
+            color: white;
+            border: none; 
+            border-radius: 12px; 
+            font-family: 'Jua', sans-serif; 
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 900px) { 
+            .container { 
+                grid-template-columns: 1fr;
+            } 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <div class="header-content">
+            <button class="add-tab-btn" onclick="addNewPage()">+</button>
+            
+            <nav class="nav-container" id="navContainer"></nav>
+            
+            <i class="fas fa-bars page-list-btn" onclick="togglePageListModal()"></i>
+        </div>
+     
+    
+        <div id="pageListModal" onclick="closePageListModal(event)">
+            <h3><i class="fas fa-file-lines"></i> 전체 페이지 목록</h3>
+            <div id="modalPageListContent"></div>
+            <button class="reset-data-btn" onclick="resetAllData()">
+                <i class="fas fa-trash-can"></i> 모든 데이터 초기화
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <aside class="quest-log-container">
+            <div class="card">
+                <h2><i class="fas 
+fa-list-check"></i> QUEST LOG</h2>
+                <ul class="quest-list" id="questList"></ul>
+                <button class="add-btn" onclick="addQuestItem()">+ 추가하기</button>
+            </div>
+        </aside>
+
+        <main>
+            <div class="card timer-card">
+                <h2><i class="far 
+fa-clock"></i> FOCUS TIMER</h2>
+                <div class="timer-inputs">
+                    <input type="number" id="min" class="time-input" value="25" min="0" max="99" onchange="saveCurrentData()" style="text-align: center;">
+                    <span>:</span>
+                    <input type="number" id="sec" class="time-input" value="00" min="0" max="59" onchange="saveCurrentData()" style="text-align: center;">
+       
+                </div>
+                <div style="z-index: 100; position: relative; margin-top: 20px;"> 
+                    <button class="btn btn-start" id="startBtn">시작</button>
+                    <button class="btn btn-reset" id="resetBtn">리셋</button> 
+                </div>
+            </div>
+
+            <div id="memoCardWrapper">
+                </div>
+            
+            <button class="add-memo-btn" onclick="addMemoItem()">+ 새 메모 카드 추가</button>
+        </main>
+
+        <aside class="quest-log-container">
+            <div class="card">
+                <h2><i class="fas fa-book-open"></i> READING</h2>
+                <input type="text" id="bookTitle" class="book-input" placeholder="책 제목" oninput="saveCurrentData()">
+                
+                <div style="display: flex; gap: 5px; align-items: center;">
+                    <input type="number" id="curPage" class="book-input" placeholder="현재" style="text-align: center;"
+oninput="updateProgress(); saveCurrentData()">
+                    <span>/</span>
+                    <input type="text" id="totPage" class="book-input placeholder-text" placeholder="전체" value="" style="text-align: center;"
+oninput="updateProgress(); saveCurrentData()">
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div style="text-align: right; font-size: 12px; margin-top: 5px; color: var(--text-light);"
+id="progressText">0%</div>
+            </div>
+
+            <div class="card music-card"> 
+                <div class="music-card-header">
+                    <h2 style="margin:0;"><i class="fas fa-music"></i> MUSIC</h2>
+                    <input type="date" id="pageDate" class="date-input" onchange="checkDateValue(this); saveCurrentData()" value="">
+        
+                </div>
+
+                <div style="font-size: 12px; color: var(--text-light); margin-bottom: 5px;">
+                    * 같은 폴더에 있는 mp3 파일명 입력
+                </div>
+                <input type="text" id="musicUrl" class="music-url-input" placeholder="예: music.mp3 또는 웹 링크" onchange="loadMusicSource(); saveCurrentData()">
+  
+                
+                <div class="music-controls">
+                    <div class="now-playing" id="nowPlayingText">재생 준비 완료</div>
+                    <button class="play-btn" onclick="toggleMusic()">
+                        <i class="fas fa-play" id="playIcon"></i>
+                    </button>
+                </div>
+                
+                <audio id="audioPlayer" loop></audio>
+            </div>
+        </aside>
+    </div>
+
+  
+    <script>
+        // DB 키 변경
+        const DB_KEY = 'somlution_study_final_ui_v3_memo_card';
+        let pages = [];
+        let activePageIndex = 0;
+        let timerInterval;
+        let isTimerRunning = false;
+        let isMusicPlaying = false;
+        let originalTimer = { min: 25, sec: 0 }; 
+        let tickCount = 0; 
+        let nextMemoId = 1; 
+
+        window.onload = function() {
+            // JS 수정: 이벤트 리스너로 버튼 바인딩 (하나의 바인딩만 남김)
+            document.getElementById('startBtn').addEventListener('click', toggleTimer);
+            document.getElementById('resetBtn').addEventListener('click', resetTimer);
+            
+            loadFromStorage();
+            if (pages.length === 0) {
+                // 새로운 구조로 초기 페이지 생성
+                addNewPage("Woah", false);
+            } else {
+                renderTabs();
+                activePageIndex = Math.min(Math.max(0, activePageIndex), pages.length - 1);
+                loadPageContent(activePageIndex);
+            }
+            
+            checkDateValue(document.getElementById('pageDate'));
+            
+            document.addEventListener('click', function(event) {
+                const modal = document.getElementById('pageListModal');
+                const listBtn = document.querySelector('.page-list-btn');
+                const addBtn = document.querySelector('.add-tab-btn');
+                const resetDataBtn = document.querySelector('.reset-data-btn'); 
+
+                if (modal.style.display === 'block' && 
+                    !modal.contains(event.target) && 
+                    !listBtn.contains(event.target) &&
+                    !addBtn.contains(event.target) &&
+                    !resetDataBtn.contains(event.target)) { 
+                    modal.style.display = 'none';
+                    modal.style.pointerEvents = 'none'; 
+                }
+            });
+        };
+        // --- Local Storage 함수 ---
+        function loadFromStorage() {
+            const data = localStorage.getItem(DB_KEY);
+            if (data) {
+                try {
+                    const parsed = JSON.parse(data);
+                    pages = parsed.pages || [];
+                    activePageIndex = parsed.activePageIndex || 0;
+                    
+                    pages.forEach(page => {
+                        // 기존 메모 구조를 새로운 메모 카드 배열 구조에 맞게 변환
+                        if (typeof page.memo === 'string') {
+                            page.memos = [{ id: nextMemoId++, content: page.memo }];
+                            delete page.memo;
+                        } else if (Array.isArray(page.memo)) {
+                            page.memos = page.memo;
+                            delete page.memo;
+                        } else if (!page.memos || page.memos.length === 0) {
+                             // memos가 아예 없거나 비어있을 경우 기본 메모 하나 생성
+                            page.memos = [{ id: nextMemoId++, content: "영원을 말했죠 꿈이 아니기를" }];
+                        } else {
+                            // 기존 memos 배열이 있는 경우 nextMemoId 업데이트
+                            page.memos.forEach(memo => {
+                                if (memo.id && memo.id >= nextMemoId) {
+                                    nextMemoId = memo.id + 1;
+                                }
+                            });
+                        }
+                    });
+
+                } catch (e) {
+                    console.error("Local Storage 파싱 오류, 초기화합니다:", e);
+                    pages = [];
+                    activePageIndex = 0;
+                }
+            }
+        }
+
+        function saveToStorage() {
+            if (pages.length === 0) return;
+            const data = { pages, activePageIndex };
+            localStorage.setItem(DB_KEY, JSON.stringify(data));
+        }
+        
+        // --- UI -> Data 저장 ---
+        function saveCurrentData() {
+            if(pages.length === 0 || activePageIndex < 0 || activePageIndex >= pages.length) return;
+            const currentPage = pages[activePageIndex];
+            
+            const todoItems = document.querySelectorAll('#questList .todo-item');
+            currentPage.todos = Array.from(todoItems).map(item => ({
+                text: item.querySelector('.todo-input').value,
+                checked: item.classList.contains('checked')
+            }));
+            const minInput = document.getElementById('min');
+            const secInput = document.getElementById('sec');
+            currentPage.timer.min = parseInt(minInput.value) || 0;
+            currentPage.timer.sec = parseInt(secInput.value) || 0;
+            
+            // **[수정]** 메모 저장 로직: 각 메모 카드의 내용을 저장
+            const memoTextareas = document.querySelectorAll('#memoCardWrapper .memo-card textarea');
+            currentPage.memos = Array.from(memoTextareas).map(textarea => ({
+                id: parseInt(textarea.closest('.memo-card').dataset.id),
+                content: textarea.value
+            }));
+            
+            currentPage.book.title = document.getElementById('bookTitle').value;
+            currentPage.book.cur = document.getElementById('curPage').value;
+            currentPage.book.tot = document.getElementById('totPage').value;
+            currentPage.date = document.getElementById('pageDate').value;
+            currentPage.music = document.getElementById('musicUrl').value;
+            
+            originalTimer.min = currentPage.timer.min;
+            originalTimer.sec = currentPage.timer.sec;
+            
+            saveToStorage();
+        }
+
+        // --- Data -> UI 로드 ---
+        function loadPageContent(index) {
+            if(pages.length === 0 || index < 0 || index >= pages.length) return;
+            if (isTimerRunning) toggleTimer(); 
+            if (isMusicPlaying) toggleMusic(); 
+
+            const page = pages[index];
+            activePageIndex = index; 
+            
+            const dateInput = document.getElementById('pageDate');
+            dateInput.value = page.date || '';
+            checkDateValue(dateInput);
+            
+            const minToLoad = (page.timer.min || 0) > 0 ? page.timer.min : 25;
+            const secToLoad = page.timer.sec >= 0 ? page.timer.sec : 0;
+            
+            document.getElementById('min').value = String(minToLoad).padStart(2, '0');
+            document.getElementById('sec').value = String(secToLoad).padStart(2, '0');
+            
+            originalTimer.min = minToLoad;
+            originalTimer.sec = secToLoad;
+            
+            // **[수정]** 메모 로드
+            renderMemos(page.memos);
+            
+            document.getElementById('bookTitle').value = page.book.title;
+            document.getElementById('curPage').value = page.book.cur;
+            
+            const totPageInput = document.getElementById('totPage');
+            totPageInput.value = page.book.tot; 
+            
+            if (!page.book.tot || isNaN(parseFloat(page.book.tot))) { 
+                totPageInput.type = 'text';
+                totPageInput.placeholder = '전체'; 
+                totPageInput.classList.add('placeholder-text'); 
+            } else { 
+                totPageInput.type = 'number';
+                totPageInput.placeholder = ''; 
+                totPageInput.classList.remove('placeholder-text');
+            }
+            updateProgress();
+            
+            document.getElementById('musicUrl').value = page.music;
+            loadMusicSource(true); 
+            
+            renderQuestList(page.todos);
+            renderTabs();
+            renderModalList();
+        }
+
+
+        // --- 탭 관리 함수 (중략) ---
+        function addNewPage(name = null, shouldSave = true) {
+            const newName = name ||
+            `Page ${pages.length + 1}`;
+            const newPage = {
+                id: Date.now(),
+                title: newName,
+                date: "", 
+                todos: [{ text: "할 일 입력", checked: false }],
+                memos: [{ id: nextMemoId++, content: "영원을 말했죠 꿈이 아니기를" }], 
+                timer: { min: 25, sec: 0 },
+                book: { title: "", cur: "", tot: "" },
+                music: "" 
+            };
+            pages.push(newPage);
+            activePageIndex = pages.length - 1;
+            
+            if (shouldSave) saveToStorage();
+            
+            loadPageContent(activePageIndex);
+            setTimeout(() => {
+                const navContainer = document.getElementById('navContainer');
+                navContainer.scrollLeft = navContainer.scrollWidth;
+            }, 100);
+        }
+
+        function switchPage(index) {
+            saveCurrentData();
+            activePageIndex = index;
+            loadPageContent(index); 
+            
+            const modal = document.getElementById('pageListModal');
+            modal.style.display = 'none';
+            modal.style.pointerEvents = 'none';
+        }
+
+        function deletePage(e, index) {
+            e.stopPropagation();
+            if(pages.length <= 1) return alert("마지막 페이지는 삭제할 수 없습니다.");
+            if(confirm('이 페이지를 삭제하시겠습니까?')) {
+                pages.splice(index, 1);
+                activePageIndex = Math.max(0, index === activePageIndex ? index - 1 : activePageIndex - (index < activePageIndex ? 1 : 0));
+                saveToStorage(); 
+                loadPageContent(activePageIndex);
+            }
+        }
+        
+        function deletePageFromModal(e, index) {
+            e.stopPropagation();
+            if(pages.length <= 1) return alert("마지막 페이지는 삭제할 수 없습니다.");
+            if(confirm(`'${pages[index].title}' 페이지를 삭제하시겠습니까?'`)) {
+                pages.splice(index, 1);
+                activePageIndex = Math.max(0, index === activePageIndex ? index - 1 : activePageIndex - (index < activePageIndex ? 1 : 0));
+                saveToStorage(); 
+                loadPageContent(activePageIndex); 
+                renderModalList(); 
+            }
+        }
+
+        function renamePage(index) {
+            const newName = prompt("페이지 이름 변경:", pages[index].title);
+            if(newName && newName.trim() !== "") { 
+                pages[index].title = newName.trim();
+                saveToStorage(); 
+                renderTabs(); 
+                renderModalList();
+            }
+        }
+
+        function renderTabs() {
+            const container = document.getElementById('navContainer');
+            container.innerHTML = '';
+            
+            pages.forEach((page, index) => {
+                const tab = document.createElement('div');
+                tab.className = `page-tab ${index === activePageIndex ? 'active' : ''}`;
+                tab.innerHTML = `<span ondblclick="renamePage(${index})">${page.title}</span><i class="fas fa-times close-tab" onclick="deletePage(event, ${index})"></i>`;
+                tab.onclick = () => switchPage(index);
+      
+                container.appendChild(tab); 
+            });
+            const activeTab = container.querySelector('.page-tab.active');
+            if (activeTab) {
+                 setTimeout(() => {
+                    activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }, 50);
+            }
+        }
+        
+        function renderModalList() {
+            const content = document.getElementById('modalPageListContent');
+            content.innerHTML = '';
+            pages.forEach((page, index) => {
+                const item = document.createElement('div');
+                item.className = `modal-page-item ${index === activePageIndex ? 'active' : ''}`;
+                item.innerHTML = `<span>${page.title}</span><i class="fas fa-times delete-modal-page-btn" onclick="deletePageFromModal(event, ${index})"></i>`;
+                item.onclick = () => switchPage(index);
+       
+                content.appendChild(item);
+            });
+        }
+        
+        function togglePageListModal() {
+            const modal = document.getElementById('pageListModal');
+            if (modal.style.display === 'block') {
+                modal.style.display = 'none';
+                modal.style.pointerEvents = 'none'; 
+            } else {
+                renderModalList();
+                modal.style.display = 'block';
+                modal.style.pointerEvents = 'auto'; 
+            }
+        }
+
+        function closePageListModal(event) {
+            if (event.target.id === 'pageListModal') {
+                document.getElementById('pageListModal').style.display = 'none';
+                document.getElementById('pageListModal').style.pointerEvents = 'none'; 
+            }
+        }
+        
+        function resetAllData() {
+            if (confirm("경고: 모든 페이지, 할 일, 타이머 기록이 영구적으로 삭제됩니다. 정말 초기화하시겠습니까?")) {
+                localStorage.removeItem(DB_KEY);
+                
+                pages = [];
+                activePageIndex = 0;
+                nextMemoId = 1;
+
+                addNewPage("Woah", false);
+                renderTabs();
+                loadPageContent(activePageIndex);
+                
+                document.getElementById('pageListModal').style.display = 'none';
+                document.getElementById('pageListModal').style.pointerEvents = 'none'; 
+
+                alert("모든 데이터가 초기화되었습니다. 'Woah'부터 새로 시작합니다.");
+            }
+        }
+
+        // --- QUEST LOG 함수 (중략) ---
+        function renderQuestList(todos) {
+            const list = document.getElementById('questList');
+            list.innerHTML = '';
+            (todos || []).forEach((todo, index) => {
+                const item = document.createElement('li');
+                item.className = `todo-item ${todo.checked ? 'checked' : ''}`;
+                
+                item.innerHTML = `
+                
+                <div class="todo-checkbox" onclick="toggleQuestCheck(this)">
+                        ${todo.checked ? '<i class="fas fa-check"></i>' : ''}
+                    </div>
+                    <input type="text" class="todo-input" value="${todo.text}" oninput="saveCurrentData()">
+                    
+                    <button class="delete-btn" onclick="deleteQuestItem(this)"><i class="fas fa-times"></i></button>
+                `;
+                list.appendChild(item);
+            });
+        }
+        function addQuestItem() {
+            const newTodo = { text: "할 일 입력", checked: false };
+            pages[activePageIndex].todos.push(newTodo);
+            renderQuestList(pages[activePageIndex].todos);
+            saveToStorage();
+        }
+        function toggleQuestCheck(checkbox) {
+            const item = checkbox.closest('.todo-item');
+            item.classList.toggle('checked');
+            checkbox.innerHTML = item.classList.contains('checked') ? '<i class="fas fa-check"></i>' : '';
+            saveCurrentData();
+        }
+        function deleteQuestItem(button) {
+            const item = button.closest('.todo-item');
+            const indexToRemove = Array.from(item.parentNode.children).indexOf(item);
+            pages[activePageIndex].todos.splice(indexToRemove, 1);
+            item.remove();
+            saveToStorage();
+        }
+
+        // --- FOCUS TIMER 함수 (중략) ---
+        function updateTimerDisplay(minutes, seconds) {
+            const minInput = document.getElementById('min');
+            const secInput = document.getElementById('sec');
+            
+            if (minInput && secInput) {
+                minInput.value = String(minutes).padStart(2, '0');
+                secInput.value = String(seconds).padStart(2, '0');
+            }
+        }
+        
+        function timerTick() {
+            let minutes = parseInt(document.getElementById('min').value);
+            let seconds = parseInt(document.getElementById('sec').value);
+
+            if (minutes === 0 && seconds === 0) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                document.getElementById('startBtn').innerText = '시작';
+                alert('시간 종료!');
+                saveCurrentData(); 
+                tickCount = 0;
+                return;
+            }
+
+            if (seconds === 0) {
+                minutes--;
+                seconds = 59;
+            } else {
+                seconds--;
+            }
+
+            updateTimerDisplay(minutes, seconds);
+            
+            tickCount++;
+            if (tickCount % 10 === 0) {
+                saveCurrentData();
+            }
+        }
+        
+        function toggleTimer() {
+            const startBtn = document.getElementById('startBtn');
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                startBtn.innerText = '시작'; 
+                isTimerRunning = false;
+            } else {
+                let minutes = parseInt(document.getElementById('min').value);
+                let seconds = parseInt(document.getElementById('sec').value);
+
+                if (minutes === 0 && seconds === 0) {
+                    alert('시간을 설정해주세요.');
+                    return;
+                }
+                
+                timerInterval = setInterval(timerTick, 1000);
+                startBtn.innerText = '일시정지';
+                isTimerRunning = true;
+            }
+            saveToStorage();
+        }
+        
+        function resetTimer() {
+            if (isTimerRunning) toggleTimer(); 
+            
+            updateTimerDisplay(originalTimer.min, originalTimer.sec); 
+            
+            document.getElementById('startBtn').innerText = '시작';
+            
+            saveCurrentData(); 
+            
+            tickCount = 0;
+        }
+
+        // --- MEMO 함수 **[수정]** ---
+        function autoExpand(field) {
+            field.style.height = 'inherit';
+            const computed = window.getComputedStyle(field);
+            const lineHeight = 30; 
+            
+            let minHeight = lineHeight * 3; 
+            
+            const height = parseInt(computed.getPropertyValue('border-top-width'), 10)
+                         + parseInt(computed.getPropertyValue('padding-top'), 10)
+                         + field.scrollHeight
+                         + parseInt(computed.getPropertyValue('padding-bottom'), 10)
+                         + parseInt(computed.getPropertyValue('border-bottom-width'), 10);
+                         
+            field.style.height = Math.max(minHeight, height) + 'px';
+        }
+
+        function renderMemos(memos) {
+            const wrapper = document.getElementById('memoCardWrapper');
+            wrapper.innerHTML = '';
+            
+            (memos || []).forEach((memo, index) => {
+                const item = document.createElement('div');
+                item.className = 'card memo-card'; 
+                item.dataset.id = memo.id;
+                
+                // 💡 수정된 부분: MEMO 1, MEMO 2 제목 텍스트 제거하고 펜 아이콘만 남김
+                // 💡 수정된 부분: 첫 번째 카드(index === 0)일 때 삭제 버튼 숨김
+                const deleteButtonHtml = index === 0 ? 
+                    '' : 
+                    `<button class="delete-memo-btn" onclick="deleteMemoItem(this)">
+                        <i class="fas fa-times"></i>
+                    </button>`;
+                
+                item.innerHTML = `
+                    <h2>
+                        <i class="fas fa-pen-fancy"></i>
+                        ${deleteButtonHtml}
+                    </h2>
+                    <textarea 
+                        oninput="autoExpand(this); saveCurrentData()"
+                        placeholder="영원을 말했죠 꿈이 아니기를"
+                    >${memo.content}</textarea>
+                `;
+                wrapper.appendChild(item);
+                
+                // 로드 후 바로 autoExpand 호출하여 높이 조정
+                autoExpand(item.querySelector('textarea'));
+            });
+        }
+        
+        function addMemoItem() {
+            const newMemo = { 
+                id: nextMemoId++, 
+                content: "" 
+            };
+            pages[activePageIndex].memos.push(newMemo);
+            renderMemos(pages[activePageIndex].memos);
+            saveToStorage();
+            
+            const wrapper = document.getElementById('memoCardWrapper');
+            // 새로 추가된 textarea에 포커스 (스크롤이 자동으로 따라가도록)
+            const newTextarea = wrapper.lastElementChild.querySelector('textarea');
+            if (newTextarea) {
+                newTextarea.focus();
+            }
+        }
+        
+        function deleteMemoItem(button) {
+            const card = button.closest('.memo-card');
+            const memoIdToRemove = parseInt(card.dataset.id);
+            
+            if (pages[activePageIndex].memos.length <= 1) {
+                 alert("마지막 메모 카드는 삭제할 수 없습니다. 내용을 지워주세요.");
+                 return;
+            }
+            
+            pages[activePageIndex].memos = pages[activePageIndex].memos.filter(memo => memo.id !== memoIdToRemove);
+            renderMemos(pages[activePageIndex].memos); 
+            saveToStorage();
+        }
+
+        // --- READING 함수 (중략) ---
+        function updateProgress() {
+            const cur = parseFloat(document.getElementById('curPage').value) ||
+            0;
+            const tot = parseFloat(document.getElementById('totPage').value) ||
+            0; 
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const totPageInput = document.getElementById('totPage');
+            
+            if (totPageInput.value.trim() === "" || isNaN(parseFloat(totPageInput.value))) {
+                totPageInput.type = 'text';
+                totPageInput.placeholder = '전체';
+                totPageInput.classList.add('placeholder-text');
+            } else {
+                totPageInput.type = 'number';
+                totPageInput.placeholder = '';
+                totPageInput.classList.remove('placeholder-text');
+            }
+
+            let percentage = 0;
+            if (tot > 0) {
+                percentage = Math.min(100, (cur / tot) * 100);
+            }
+            
+            progressBar.style.width = percentage + '%';
+            progressText.innerText = Math.round(percentage) + '%';
+        }
+
+        // --- MUSIC/DATE 함수 (중략) ---
+        function checkDateValue(input) {
+            if (input.value) {
+                input.classList.add('has-value');
+            } else {
+                input.classList.remove('has-value');
+            }
+        }
+        
+        function loadMusicSource(silent = false) {
+            const url = document.getElementById('musicUrl').value.trim();
+            const player = document.getElementById('audioPlayer');
+            const nowPlayingText = document.getElementById('nowPlayingText');
+
+            if (url) {
+                player.src = url;
+                nowPlayingText.innerText = url.substring(url.lastIndexOf('/') + 1) || "음악 로드됨";
+                if (!silent && !isMusicPlaying) toggleMusic(true);
+            } else {
+                player.src = '';
+                nowPlayingText.innerText = '재생 준비 완료';
+                if (isMusicPlaying) toggleMusic(false); 
+            }
+        }
+
+        function toggleMusic(forcePlay = false) {
+            const player = document.getElementById('audioPlayer');
+            const playIcon = document.getElementById('playIcon');
+            const url = document.getElementById('musicUrl').value.trim();
+
+            if (!url && !isMusicPlaying && !forcePlay) {
+                alert("재생할 음악 파일명이나 링크를 입력해주세요.");
+                return;
+            }
+
+            if (isMusicPlaying && !forcePlay) {
+                player.pause();
+                playIcon.classList.remove('fa-pause');
+                playIcon.classList.add('fa-play');
+                isMusicPlaying = false;
+            } else if (url) {
+                player.load();
+                // 오토플레이 차단 가능성이 있어 play()는 try-catch로 감싸는 것이 좋습니다.
+                player.play().catch(error => {
+                    console.error("Audio playback failed:", error);
+                });
+                playIcon.classList.remove('fa-play');
+                playIcon.classList.add('fa-pause');
+                isMusicPlaying = true;
+            }
+        }
+    </script>
+</body>
+</html>
